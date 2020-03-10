@@ -2,6 +2,7 @@
 VCS entry point.
 '''
 
+
 def run():
     '''
     Initialize counter class and run counting loop.
@@ -36,8 +37,8 @@ def run():
     # create detection region of interest polygon
     use_droi = ast.literal_eval(os.getenv('USE_DROI'))
     droi = ast.literal_eval(os.getenv('DROI')) \
-            if use_droi \
-            else [(0, 0), (f_width, 0), (f_width, f_height), (0, f_height)]
+        if use_droi \
+        else [(0, 0), (f_width, 0), (f_width, f_height), (0, f_height)]
     show_droi = ast.literal_eval(os.getenv('SHOW_DROI'))
     counting_lines = ast.literal_eval(os.getenv('COUNTING_LINES'))
     show_counts = ast.literal_eval(os.getenv('SHOW_COUNTS'))
@@ -50,10 +51,10 @@ def run():
 
     if record:
         # initialize video object to record counting
-        output_video = cv2.VideoWriter(os.getenv('OUTPUT_VIDEO_PATH'), \
-                                        cv2.VideoWriter_fourcc(*'MJPG'), \
-                                        30, \
-                                        (f_width, f_height))
+        output_video = cv2.VideoWriter(os.getenv('OUTPUT_VIDEO_PATH'),
+                                       cv2.VideoWriter_fourcc(*'MJPG'),
+                                       30,
+                                       (f_width, f_height))
 
     logger.info('Processing started.', extra={
         'meta': {
@@ -75,7 +76,8 @@ def run():
     if not headless:
         # capture mouse events in the debug window
         cv2.namedWindow('Debug')
-        cv2.setMouseCallback('Debug', mouse_callback, {'frame_width': f_width, 'frame_height': f_height})
+        cv2.setMouseCallback('Debug', mouse_callback, {
+                             'frame_width': f_width, 'frame_height': f_height})
 
     is_paused = False
     output_frame = None
@@ -83,20 +85,22 @@ def run():
     # main loop
     while is_cam or cap.get(cv2.CAP_PROP_POS_FRAMES) + 1 < cap.get(cv2.CAP_PROP_FRAME_COUNT):
         k = cv2.waitKey(1) & 0xFF
-        if k == ord('p'): # pause/play loop if 'p' key is pressed
+        if k == ord('p'):  # pause/play loop if 'p' key is pressed
             is_paused = False if is_paused else True
-            logger.info('Loop paused/played.', extra={'meta': {'label': 'PAUSE_PLAY_LOOP', 'is_paused': is_paused}})
-        if k == ord('s') and output_frame is not None: # save frame if 's' key is pressed
+            logger.info('Loop paused/played.',
+                        extra={'meta': {'label': 'PAUSE_PLAY_LOOP', 'is_paused': is_paused}})
+        if k == ord('s') and output_frame is not None:  # save frame if 's' key is pressed
             take_screenshot(output_frame)
-        if k == ord('q'): # end video loop if 'q' key is pressed
-            logger.info('Loop stopped.', extra={'meta': {'label': 'STOP_LOOP'}})
+        if k == ord('q'):  # end video loop if 'q' key is pressed
+            logger.info('Loop stopped.', extra={
+                        'meta': {'label': 'STOP_LOOP'}})
             break
 
         if is_paused:
             time.sleep(0.5)
             continue
 
-        _timer = cv2.getTickCount() # set timer to calculate processing frame rate
+        _timer = cv2.getTickCount()  # set timer to calculate processing frame rate
 
         if ret:
             vehicle_counter.count(frame)
@@ -106,11 +110,13 @@ def run():
                 output_video.write(output_frame)
 
             if not headless:
-                debug_window_size = ast.literal_eval(os.getenv('DEBUG_WINDOW_SIZE'))
+                debug_window_size = ast.literal_eval(
+                    os.getenv('DEBUG_WINDOW_SIZE'))
                 resized_frame = cv2.resize(output_frame, debug_window_size)
                 cv2.imshow('Debug', resized_frame)
 
-        processing_frame_rate = round(cv2.getTickFrequency() / (cv2.getTickCount() - _timer), 2)
+        processing_frame_rate = round(
+            cv2.getTickFrequency() / (cv2.getTickCount() - _timer), 2)
         frames_processed = round(cap.get(cv2.CAP_PROP_POS_FRAMES))
         frames_count = round(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         logger.debug('Frame processed.', extra={
@@ -132,13 +138,3 @@ def run():
     if record:
         output_video.release()
     logger.info('Processing ended.', extra={'meta': {'label': 'END_PROCESS'}})
-
-
-if __name__ == '__main__':
-    from dotenv import load_dotenv
-    load_dotenv()
-
-    from util.logger import init_logger
-    init_logger()
-
-    run()
