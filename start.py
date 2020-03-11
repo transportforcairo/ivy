@@ -9,11 +9,14 @@ def fetch_vid(url):
     Download requested video
     '''
     import requests
+    from tqdm import tqdm
 
     local_filename = url.split('/')[-1]
 
     with requests.get(url, stream=True) as req:
         header = req.headers
+
+        # Check type of download is file
         content_type = header.get('content-type')
         if 'text' in content_type.lower():
             print("Invalid URL. Received {}".format(content_type))
@@ -21,14 +24,26 @@ def fetch_vid(url):
         if 'html' in content_type.lower():
             print("Invalid URL. Received {}".format(content_type))
             return
-        req.raise_for_status()
 
         if req.status_code == 200:
             print("Fetched Successfully!")
-            with open('./data/videos/{}'.format(local_filename), 'wb') as file:
-                file.write(req.content)
 
-    return ('./data/videos/{}'.format(local_filename))
+            # Display download progress bar
+            print("Downloading...")
+            total_size = int(req.headers.get('content-length', 0))
+            block_size = 1024  # 1 Kilobyte
+            transfer = tqdm(total=total_size, unit='iB', unit_scale=True)
+            with open('./data/videos/{}'.format(local_filename), 'wb') as file:
+                for data in req.iter_content(block_size):
+                    transfer.update(len(data))
+                    file.write(data)
+            transfer.close()
+            if total_size != 0 and transfer.n != total_size:
+                print("ERROR, something went wrong")
+
+        req.raise_for_status()
+
+    return './data/videos/{}'.format(local_filename)
 
 
 def initialize_ivy():
@@ -41,8 +56,15 @@ def initialize_ivy():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-v", "--video", required=True, help="Video URL")
+    parser.add_argument("-c", "--class", required=True,
+                        help="Classes of Interest")
     args = vars(parser.parse_args())
     vid_url = args["video"]
+    classes_of_interest = args["class"].strip("[]").split(",")
+
+    with open(os.getenv('YOLO_CLASSES_OF_INTEREST_PATH'), 'w+') as coi_file:
+        for coi in classes_of_interest:
+            coi_file.write(f"{coi}\n")
 
     print("Fetching video from: {}".format(vid_url))
 
