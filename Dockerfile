@@ -14,6 +14,8 @@ WORKDIR /code
 
 RUN git clone --branch docker-prep https://github.com/transportforcairo/ivy.git ivy
 WORKDIR /code/ivy
+# numpy needs to be installed for yolo34-gpu
+RUN pip install numpy
 # Install required libraries for Ivy
 RUN GPU=1 pip install -r requirements.txt && \
     apt-get install -y libsm6 libxext6 libxrender-dev
