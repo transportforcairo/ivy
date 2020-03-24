@@ -26,4 +26,3 @@ RUN wget --load-cookies /tmp/cookies.txt \
     mv .env.tfc .env
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["python3 -m start"]
