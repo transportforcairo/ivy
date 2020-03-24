@@ -1,4 +1,4 @@
-FROM nvidia/driver:418.40.04-ubuntu18.04
+FROM nvidia/cuda:10.2-cudnn7-runtime
 
 LABEL Author="Transport for Cairo"
 
@@ -6,14 +6,16 @@ LABEL Author="Transport for Cairo"
 RUN apt-get -y update &&\
     apt-get install -y software-properties-common && \
     add-apt-repository universe && \
-    apt-get install -y git unzip python3.7 python3-pip wget
+    apt-get install -y git unzip python3.7 python3-pip wget pkg-config 
+
+RUN pip3 install --upgrade pip
+RUN mkdir /code
+WORKDIR /code
 
 RUN git clone --branch docker-prep https://github.com/transportforcairo/ivy.git ivy
-
-WORKDIR /usr/src/nvidia-418.40.04/ivy
-
+WORKDIR /code/ivy
 # Install required libraries for Ivy
-RUN pip3 install -r requirements.txt && \
+RUN GPU=1 pip install -r requirements.txt && \
     apt-get install -y libsm6 libxext6 libxrender-dev
 
 # Fetch YOLOv3 weights
