@@ -18,8 +18,8 @@ WORKDIR /code/ivy
 RUN pip install numpy
 # Install required libraries for Ivy
 RUN pip install -r requirements.txt
-RUN pip install opencv-python==3.4.0.14 opencv-contrib-python==4.1.2.30
-RUN GPU=1 pip install yolo34py
+RUN pip install opencv-python opencv-contrib-python
+RUN GPU=1 pip install yolo34py yolo34py-gpu
 RUN apt-get install -y libsm6 libxext6 libxrender-dev
 
 # Fetch YOLOv3 weights
