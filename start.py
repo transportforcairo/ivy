@@ -33,7 +33,7 @@ def fetch_vid(url):
             total_size = int(req.headers.get('content-length', 0))
             block_size = 1024  # 1 Kilobyte
             transfer = tqdm(total=total_size, unit='iB', unit_scale=True)
-            with open('./data/videos/{}'.format(local_filename), 'wb') as file:
+            with open('./videos/{}'.format(local_filename), 'wb') as file:
                 for data in req.iter_content(block_size):
                     transfer.update(len(data))
                     file.write(data)
@@ -43,7 +43,7 @@ def fetch_vid(url):
 
         req.raise_for_status()
 
-    return './data/videos/{}'.format(local_filename)
+    return './videos/{}'.format(local_filename)
 
 
 def initialize_ivy():
