@@ -22,5 +22,5 @@ RUN pip3 install --upgrade pip && pip install -r requirements.txt && \
 # Copy base env
 RUN mv .env.base .env
 # Copy models data
-RUN cp -r ${MODEL} ./detectors/ && rm -rf models/
+RUN cp -r ${MODEL}/* ./data/detectors/ && rm -rf models/
 ENTRYPOINT ["python3", "-m", "start"]
