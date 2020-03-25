@@ -14,7 +14,8 @@ RUN mkdir /code
 WORKDIR /code
 # Copy code 
 COPY . .
-RUN mkdir videos
+RUN mkdir -p videos
+RUN mkdir -p data/detectors
 # Install required libraries for Ivy
 RUN pip3 install --upgrade pip && pip install -r requirements.txt && \
     pip install opencv-python opencv-contrib-python && \
@@ -22,5 +23,5 @@ RUN pip3 install --upgrade pip && pip install -r requirements.txt && \
 # Copy base env
 RUN mv .env.base .env
 # Copy models data
-RUN cp -r ${MODEL}/* ./data/detectors/ && rm -rf models/
+RUN cp -r ${MODEL}/* data/detectors/ && rm -rf models/
 ENTRYPOINT ["python3", "-m", "start"]
