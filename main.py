@@ -138,3 +138,122 @@ def run():
     if record:
         output_video.release()
     logger.info('Processing ended.', extra={'meta': {'label': 'END_PROCESS'}})
+
+    # post final counts
+    import requests
+    import mimetypes
+    import asyncio
+
+    final_counts = vehicle_counter.counts
+    job_id = os.environ['JOB_ID']
+    posting_url = os.environ['API_HOST'].join(os.environ['API_URL'])
+
+    async def update_job():
+        update_job_mutation = """
+        mutation UpdateJob($jobId: Float!, $count: String!, $cmd: String!){
+            updateJob(
+                jobId: $jobId
+                count: $count
+                cmd: $cmd
+            ) {
+                status
+            }
+        }
+        """
+        update_variables = {
+            "jobId": job_id,
+            "count": final_counts,
+            "cmd": "completed"
+        }
+
+        update_final_counts = requests.post(
+            posting_url, json={'query': update_job_mutation, 'variables': update_variables})
+
+        if update_final_counts.status_code == 200:
+            print(update_final_counts.json())
+        else:
+            raise Exception("Query failed to run by returning code of {}. {}. {}.".format(
+                update_final_counts.status_code, update_job_mutation, update_final_counts.json()))
+
+    asyncio.run(update_job())
+
+    # upload file to s3
+    async def s3_sign(file):
+        """
+        Get presigned url to auth upload
+        """
+        sign_mutation = """
+        mutation JobCompleteSignS3($filetype: String!, $jobId: Float!) {
+            jobCompleteSignS3 (filetype: $filetype, jobId: $jobId){
+                    signedRequest	
+                    url
+                }
+        }
+        """
+        variables = {
+            "filetype": mimetypes.guess_type(file.name)[0],
+            "jobId": job_id
+        }
+        return requests.post(posting_url, json={
+            'query': sign_mutation, 'variables': variables})
+
+    async def upload_to_s3(file, signed_request):
+        """
+        Upload output file to S3
+        """
+        headers = {
+            "Content-Type": mimetypes.guess_type(file.name)[0]
+        }
+        return requests.put(signed_request, data=file, headers=headers)
+
+    async def add_to_db(file, url, filename):
+        """
+        Index uploaded file in DB
+        """
+        create_video_mutation = """
+        mutation CreateVideo($filename: String!, $size: Int!, $URI: String!) {
+            createVideo(
+                name: $filename
+                size: $size
+                URI: $URI
+            ) {
+                id
+            }
+        }
+        """
+        variables = {
+            "filename": filename,
+            "size": os.stat(file.name).st_size,
+            " url": url
+        }
+        return requests.post(posting_url, json={
+            'query': create_video_mutation, 'variables': variables})
+
+    async def start_uploading():
+        """
+        Upload file flow
+        """
+        presigned_url = ''
+        location_url = ''
+        with open("./data/videos/output.avi", 'rb') as f:
+            response = await s3_sign(f)
+            if response.status_code == 200:
+                presigned_url = response.json(
+                )['data']['jobCompleteSignS3']['signedRequest']
+                location_url = response.json(
+                )['data']['jobCompleteSignS3']['url']
+                print("signed: {}\nfinal destination: {}".format(
+                    presigned_url, location_url))
+            else:
+                raise Exception("Query failed to run by returning code of {} during upload".format(
+                    response.status_code))
+
+        final_filename = location_url.split("/")[-1]
+        os.rename("./data/videos/output.avi",
+                  f"./data/videos/{final_filename}.avi")
+
+        with open(f"./data/videos/{final_filename}.avi", 'rb') as f:
+            await upload_to_s3(f, presigned_url)
+            await add_to_db(f, location_url, final_filename)
+
+    asyncio.run(start_uploading())

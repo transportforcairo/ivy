@@ -11,13 +11,13 @@ def fetch_vid(url):
     import requests
     from tqdm import tqdm
 
-    local_filename = url.split('/')[-1]
-
+    local_filename = url.split('/')[-1].split('?')[0]
     with requests.get(url, stream=True) as req:
         header = req.headers
 
         # Check type of download is file
         content_type = header.get('content-type')
+
         if 'text' in content_type.lower():
             print("Invalid URL. Received {}".format(content_type))
             return
@@ -33,6 +33,7 @@ def fetch_vid(url):
             total_size = int(req.headers.get('content-length', 0))
             block_size = 1024  # 1 Kilobyte
             transfer = tqdm(total=total_size, unit='iB', unit_scale=True)
+
             with open('./videos/{}'.format(local_filename), 'wb') as file:
                 for data in req.iter_content(block_size):
                     transfer.update(len(data))
