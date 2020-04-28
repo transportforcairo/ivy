@@ -249,7 +249,7 @@ def run():
                     response.status_code))
 
         new_out_video_path = os.path.join(
-            os.getcwd(), "data/videos/"+location_url.split("/")[-1]+".avi")
+            os.getcwd(), location_url.split("/")[-1]+".avi")
         print("New OUTPUT_VIDEO_PATH", new_out_video_path)
         os.rename(out_video_path, new_out_video_path)
         with open(new_out_video_path, 'rb') as f:
