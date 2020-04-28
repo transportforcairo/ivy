@@ -144,7 +144,7 @@ def run():
     import mimetypes
 
     final_counts = vehicle_counter.counts
-    job_id = os.environ['JOB_ID']
+    job_id = int(os.environ['JOB_ID'])
     posting_url = os.environ['API_HOST'] + os.environ['API_URL']
 
     def update_job():
