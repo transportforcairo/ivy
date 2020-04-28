@@ -48,10 +48,11 @@ def run():
 
     record = ast.literal_eval(os.getenv('RECORD'))
     headless = ast.literal_eval(os.getenv('HEADLESS'))
-
+    out_video_path = os.path.join(os.getcwd(), os.getenv('OUTPUT_VIDEO_PATH'))
+    print("OUTPUT_VIDEO_PATH", out_video_path)
     if record:
         # initialize video object to record counting
-        output_video = cv2.VideoWriter(os.getenv('OUTPUT_VIDEO_PATH'),
+        output_video = cv2.VideoWriter(out_video_path,
                                        cv2.VideoWriter_fourcc(*'MJPG'),
                                        30,
                                        (f_width, f_height))
@@ -234,7 +235,7 @@ def run():
         """
         presigned_url = ''
         location_url = ''
-        with open(os.getenv('OUTPUT_VIDEO_PATH'), 'rb') as f:
+        with open(out_video_path, 'rb') as f:
             response = s3_sign(f)
             if response.status_code == 200:
                 presigned_url = response.json(
@@ -247,12 +248,12 @@ def run():
                 raise Exception("Query failed to run by returning code of {} during upload".format(
                     response.status_code))
 
-        final_filename = location_url.split("/")[-1]
-        os.rename(os.getenv('OUTPUT_VIDEO_PATH'),
-                  f"./data/videos/{final_filename}.avi")
-
-        with open(f"./data/videos/{final_filename}.avi", 'rb') as f:
+        new_out_video_path = os.path.join(
+            os.getcwd(), "./data/videos/"+location_url.split("/")[-1]+".avi")
+        print("New OUTPUT_VIDEO_PATH", new_out_video_path)
+        os.rename(out_video_path, new_out_video_path)
+        with open(new_out_video_path, 'rb') as f:
             upload_to_s3(f, presigned_url)
-            add_to_db(f, location_url, final_filename)
+            add_to_db(f, location_url, new_out_video_path)
 
     start_uploading()
