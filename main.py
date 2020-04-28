@@ -12,7 +12,7 @@ def run():
     import os
     import time
     import cv2
-
+    import json
     from util.image import take_screenshot
     from util.logger import get_logger
     from util.debugger import mouse_callback
@@ -161,7 +161,7 @@ def run():
         """
         update_variables = {
             "jobId": job_id,
-            "count": final_counts,
+            "count": json.dumps(final_counts),
             "cmd": "completed"
         }
 
