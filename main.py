@@ -234,7 +234,7 @@ def run():
         """
         presigned_url = ''
         location_url = ''
-        with open("./data/videos/output.avi", 'rb') as f:
+        with open(os.getenv('OUTPUT_VIDEO_PATH'), 'rb') as f:
             response = s3_sign(f)
             if response.status_code == 200:
                 presigned_url = response.json(
@@ -248,7 +248,7 @@ def run():
                     response.status_code))
 
         final_filename = location_url.split("/")[-1]
-        os.rename("./data/videos/output.avi",
+        os.rename(os.getenv('OUTPUT_VIDEO_PATH'),
                   f"./data/videos/{final_filename}.avi")
 
         with open(f"./data/videos/{final_filename}.avi", 'rb') as f:
