@@ -142,13 +142,12 @@ def run():
     # post final counts
     import requests
     import mimetypes
-    import asyncio
 
     final_counts = vehicle_counter.counts
     job_id = os.environ['JOB_ID']
     posting_url = os.environ['API_HOST'].join(os.environ['API_URL'])
 
-    async def update_job():
+    def update_job():
         update_job_mutation = """
         mutation UpdateJob($jobId: Float!, $count: String!, $cmd: String!){
             updateJob(
@@ -175,10 +174,10 @@ def run():
             raise Exception("Query failed to run by returning code of {}. {}. {}.".format(
                 update_final_counts.status_code, update_job_mutation, update_final_counts.json()))
 
-    asyncio.run(update_job())
+    update_job()
 
     # upload file to s3
-    async def s3_sign(file):
+    def s3_sign(file):
         """
         Get presigned url to auth upload
         """
@@ -197,7 +196,7 @@ def run():
         return requests.post(posting_url, json={
             'query': sign_mutation, 'variables': variables})
 
-    async def upload_to_s3(file, signed_request):
+    def upload_to_s3(file, signed_request):
         """
         Upload output file to S3
         """
@@ -206,7 +205,7 @@ def run():
         }
         return requests.put(signed_request, data=file, headers=headers)
 
-    async def add_to_db(file, url, filename):
+    def add_to_db(file, url, filename):
         """
         Index uploaded file in DB
         """
@@ -229,14 +228,14 @@ def run():
         return requests.post(posting_url, json={
             'query': create_video_mutation, 'variables': variables})
 
-    async def start_uploading():
+    def start_uploading():
         """
         Upload file flow
         """
         presigned_url = ''
         location_url = ''
         with open("./data/videos/output.avi", 'rb') as f:
-            response = await s3_sign(f)
+            response = s3_sign(f)
             if response.status_code == 200:
                 presigned_url = response.json(
                 )['data']['jobCompleteSignS3']['signedRequest']
@@ -253,7 +252,7 @@ def run():
                   f"./data/videos/{final_filename}.avi")
 
         with open(f"./data/videos/{final_filename}.avi", 'rb') as f:
-            await upload_to_s3(f, presigned_url)
-            await add_to_db(f, location_url, final_filename)
+            upload_to_s3(f, presigned_url)
+            add_to_db(f, location_url, final_filename)
 
-    asyncio.run(start_uploading())
+    start_uploading()
