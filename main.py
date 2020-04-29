@@ -148,6 +148,7 @@ def run():
     job_id = int(os.environ['JOB_ID'])
     posting_url = os.environ['API_HOST'] + os.environ['API_URL']
 
+    # Upload final counts to db
     def update_job():
         update_job_mutation = """
         mutation UpdateJob($jobId: Float!, $count: String!, $cmd: String!){
@@ -177,7 +178,7 @@ def run():
 
     update_job()
 
-    # upload file to s3
+    # Get presigned URL, auth to upload
     def s3_sign(file):
         """
         Get presigned url to auth upload
@@ -194,9 +195,16 @@ def run():
             "filetype": mimetypes.guess_type(file.name)[0],
             "jobId": job_id
         }
-        return requests.post(posting_url, json={
+        sign_response = requests.post(posting_url, json={
             'query': sign_mutation, 'variables': variables})
+        if sign_response.status_code == 200:
+            print(sign_response.json())
+            return sign_response
+        else:
+            raise Exception("Query failed to run by returning code of {}. {}. {}.".format(
+                sign_response.status_code, sign_mutation, sign_response.json()))
 
+    # Send put request to AWS S3 with file
     def upload_to_s3(file, signed_request):
         """
         Upload output file to S3
@@ -204,14 +212,21 @@ def run():
         headers = {
             "Content-Type": mimetypes.guess_type(file.name)[0]
         }
-        return requests.put(signed_request, data=file, headers=headers)
+        s3_upload = requests.put(signed_request, data=file, headers=headers)
 
+        if s3_upload.status_code == 200:
+            print(s3_upload.json())
+        else:
+            raise Exception("Query failed to run by returning code of {}. {}".format(
+                s3_upload.status_code, s3_upload.json()))
+
+    # Index uploaded file in db
     def add_to_db(file, url, filename):
         """
         Index uploaded file in DB
         """
         create_video_mutation = """
-        mutation CreateVideo($filename: String!, $size: Int!, $URI: String!) {
+        mutation CreateVideo($filename: String!, $size: Float!, $URI: String!) {
             createVideo(
                 name: $filename
                 size: $size
@@ -226,9 +241,16 @@ def run():
             "size": os.stat(file.name).st_size,
             " url": url
         }
-        return requests.post(posting_url, json={
+        add_db_index = requests.post(posting_url, json={
             'query': create_video_mutation, 'variables': variables})
 
+        if add_db_index.status_code == 200:
+            print(add_db_index.json())
+        else:
+            raise Exception("Query failed to run by returning code of {}. {}. {}.".format(
+                add_db_index.status_code, create_video_mutation, add_db_index.json()))
+
+    # Trigger upload process
     def start_uploading():
         """
         Upload file flow
