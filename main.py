@@ -239,7 +239,7 @@ def run():
             "jobId": job_id,
             "filename": filename,
             "size": os.stat(file.name).st_size,
-            "url": url
+            "URI": url
         }
         add_db_index = requests.post(posting_url, json={
             'query': create_video_mutation, 'variables': variables})
