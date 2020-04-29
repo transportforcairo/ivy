@@ -53,7 +53,7 @@ def run():
     if record:
         # initialize video object to record counting
         output_video = cv2.VideoWriter(out_video_path,
-                                       cv2.VideoWriter_fourcc(*'MJPG'),
+                                       cv2.VideoWriter_fourcc(*'MP4V'),
                                        30,
                                        (f_width, f_height))
 
@@ -273,7 +273,7 @@ def run():
                     response.status_code))
 
         new_out_video_path = os.path.join(
-            os.getcwd(), location_url.split("/")[-1]+".avi")
+            os.getcwd(), location_url.split("/")[-1]+".mp4")
         print("New OUTPUT_VIDEO_PATH", new_out_video_path)
         os.rename(out_video_path, new_out_video_path)
         with open(new_out_video_path, 'rb') as f:
