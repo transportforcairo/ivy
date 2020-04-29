@@ -226,8 +226,9 @@ def run():
         Index uploaded file in DB
         """
         create_video_mutation = """
-        mutation CreateVideo($filename: String!, $size: Float!, $URI: String!) {
-            createVideo(
+        mutation CreateVideo($jobId: Float!, $filename: String!, $size: Float!, $URI: String!) {
+            createProcessedVideo(
+                jobId: $jobId
                 name: $filename
                 size: $size
                 URI: $URI
@@ -237,9 +238,10 @@ def run():
         }
         """
         variables = {
+            "jobId": job_id,
             "filename": filename,
             "size": os.stat(file.name).st_size,
-            " url": url
+            "url": url
         }
         add_db_index = requests.post(posting_url, json={
             'query': create_video_mutation, 'variables': variables})
