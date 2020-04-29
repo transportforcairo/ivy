@@ -215,7 +215,7 @@ def run():
         s3_upload = requests.put(signed_request, data=file, headers=headers)
 
         if s3_upload.status_code == 200:
-            print(s3_upload.json())
+            print(s3_upload.text())
         else:
             raise Exception("Query failed to run by returning code of {}. {}".format(
                 s3_upload.status_code, s3_upload.json()))
