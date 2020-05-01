@@ -53,7 +53,8 @@ def run():
     if record:
         # initialize video object to record counting
         output_video = cv2.VideoWriter(out_video_path,
-                                       cv2.VideoWriter_fourcc(*'MJPG'),
+                                    #    cv2.VideoWriter_fourcc(*'MJPG'),
+                                       0x00000021,
                                        30,
                                        (f_width, f_height))
 
