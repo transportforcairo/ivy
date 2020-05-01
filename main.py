@@ -48,12 +48,13 @@ def run():
 
     record = ast.literal_eval(os.getenv('RECORD'))
     headless = ast.literal_eval(os.getenv('HEADLESS'))
-    out_video_path = os.path.join(os.getcwd(), os.getenv('OUTPUT_VIDEO_PATH'))
+    # out_video_path = os.path.join(os.getcwd(), os.getenv('OUTPUT_VIDEO_PATH'))
+    out_video_path = os.getenv('OUTPUT_VIDEO_PATH')
     print("OUTPUT_VIDEO_PATH", out_video_path)
     if record:
         # initialize video object to record counting
         output_video = cv2.VideoWriter(out_video_path,
-                                       cv2.VideoWriter_fourcc(*'H260'),
+                                       cv2.VideoWriter_fourcc(*'H264'),
                                        30,
                                        (f_width, f_height))
 
