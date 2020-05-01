@@ -7,7 +7,7 @@ RUN apt-get -y update &&\
     apt-get install -y software-properties-common && \
     add-apt-repository universe && \
     apt-get install -y git unzip python3.7 python3-pip wget pkg-config \
-    libsm6 libxext6 libxrender-dev gstreamer1.0-libav
+    libsm6 libxext6 libxrender-dev gstreamer1.0-libav ffmpeg
 
 
 RUN mkdir /code

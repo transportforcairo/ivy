@@ -48,13 +48,12 @@ def run():
 
     record = ast.literal_eval(os.getenv('RECORD'))
     headless = ast.literal_eval(os.getenv('HEADLESS'))
-    # out_video_path = os.path.join(os.getcwd(), os.getenv('OUTPUT_VIDEO_PATH'))
-    out_video_path = os.getenv('OUTPUT_VIDEO_PATH')
+    out_video_path = os.path.join(os.getcwd(), os.getenv('OUTPUT_VIDEO_PATH'))
     print("OUTPUT_VIDEO_PATH", out_video_path)
     if record:
         # initialize video object to record counting
         output_video = cv2.VideoWriter(out_video_path,
-                                       cv2.VideoWriter_fourcc(*'H264'),
+                                       cv2.VideoWriter_fourcc(*'MJPG'),
                                        30,
                                        (f_width, f_height))
 
@@ -251,6 +250,10 @@ def run():
             raise Exception("Query failed to run by returning code of {}. {}. {}.".format(
                 add_db_index.status_code, create_video_mutation, add_db_index.json()))
 
+    def convert_avi_to_mp4(avi_file_path, output_name):
+        os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input=avi_file_path, output=output_name))
+        return True
+
     # Trigger upload process
     def start_uploading():
         """
@@ -274,7 +277,8 @@ def run():
         new_out_video_path = os.path.join(
             os.getcwd(), location_url.split("/")[-1]+".mp4")
         print("New OUTPUT_VIDEO_PATH", new_out_video_path)
-        os.rename(out_video_path, new_out_video_path)
+        convert_avi_to_mp4(out_video_path, new_out_video_path)
+        # os.rename(out_video_path, new_out_video_path)
         with open(new_out_video_path, 'rb') as f:
             upload_to_s3(f, presigned_url)
             add_to_db(f, location_url, new_out_video_path)
