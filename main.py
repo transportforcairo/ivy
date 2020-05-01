@@ -282,6 +282,6 @@ def run():
         # os.rename(out_video_path, new_out_video_path)
         with open(new_out_video_path, 'rb') as f:
             upload_to_s3(f, presigned_url)
-            add_to_db(f, location_url, new_out_video_path)
+            add_to_db(f, location_url, location_url.split("/")[-1])
 
     start_uploading()
